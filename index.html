@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrice Qualité × Attrait — Univers canadien</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #F7F6F2;
+    --surface:  #FFFFFF;
+    --border:   #E2DFD6;
+    --border2:  #C8C4B8;
+    --text:     #1A1917;
+    --muted:    #6B6860;
+    --faint:    #F0EEE9;
+    --accent:   #1A1917;
+    --radius:   10px;
+    --font:     'IBM Plex Sans', sans-serif;
+    --mono:     'IBM Plex Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 28px 20px 40px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: var(--mono);
+  }
+  .updated {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    text-align: right;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .ctrl-lbl {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-right: 2px;
+    white-space: nowrap;
+  }
+  .ctrl-group { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
+
+  .btn {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--muted);
+    transition: all .15s;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.port-active { background: #1D4ED8; color: #fff; border-color: #1D4ED8; }
+
+  .matrix-wrap { display: flex; gap: 0; align-items: stretch; }
+  .y-axis {
+    display: flex; align-items: center; justify-content: center;
+    width: 22px; flex-shrink: 0;
+  }
+  .y-axis span {
+    font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    color: var(--muted); white-space: nowrap;
+    transform: rotate(-90deg);
+    font-family: var(--mono);
+    text-transform: uppercase;
+  }
+
+  .matrix-inner { flex: 1; min-width: 0; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 56px 1fr 1fr 1fr;
+    grid-template-rows: 30px 1fr 1fr 1fr;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--border);
+    gap: 1px;
+    min-height: 480px;
+  }
+
+  .corner { background: var(--faint); }
+  .col-hdr {
+    background: var(--faint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 600; color: var(--muted);
+    letter-spacing: .03em; text-transform: uppercase;
+    font-family: var(--mono);
+  }
+  .row-hdr {
+    background: var(--faint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: var(--muted);
+    writing-mode: vertical-rl; text-orientation: mixed;
+    letter-spacing: .06em; text-transform: uppercase;
+    font-family: var(--mono);
+  }
+
+  .cell {
+    background: var(--surface);
+    padding: 8px;
+    min-height: 148px;
+    position: relative;
+  }
+  .cell.q-ff { background: #FEF9F9; }
+  .cell.q-ee { background: #F3FBF5; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .chip {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 7px; border-radius: 12px;
+    border: 1px solid transparent;
+    white-space: nowrap; cursor: default;
+    line-height: 1.4;
+    font-family: var(--mono);
+    letter-spacing: .02em;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .chip:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.10); }
+  .chip sup { font-size: 7px; margin-left: 1px; }
+
+  .x-axis {
+    text-align: center;
+    font-size: 10px; font-weight: 600;
+    color: var(--muted); margin-top: 7px;
+    letter-spacing: .12em; text-transform: uppercase;
+    font-family: var(--mono);
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .leg { display: flex; align-items: center; gap: 5px; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .leg span { font-size: 11px; color: var(--muted); font-family: var(--font); }
+  .leg-star { font-size: 11px; color: var(--muted); margin-left: 8px; font-style: italic; }
+
+  .empty-note {
+    font-size: 10px; color: var(--muted);
+    font-style: italic; padding: 4px 2px;
+    font-family: var(--font);
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 16px 10px 30px; }
+    .grid { min-height: 360px; }
+    .chip { font-size: 9px; padding: 2px 5px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Matrice Qualité × Attrait</h1>
+    <div class="sub">Univers canadien — Compounders &amp; Cycliques</div>
+  </div>
+  <div class="updated">Mis à jour : mars 2026</div>
+</header>
+
+<div class="controls" id="controls"></div>
+
+<div class="matrix-wrap">
+  <div class="y-axis"><span>Qualité</span></div>
+  <div class="matrix-inner">
+    <div class="grid" id="grid"></div>
+    <div class="x-axis">Attrait</div>
+  </div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<script>
+const S = {
+  "Communication Services": { color:"#7C3AED", bg:"#EDE9FE", text:"#5B21B6", border:"#C4B5FD" },
+  "Consumer Discretionary": { color:"#D97706", bg:"#FEF3C7", text:"#92400E", border:"#FCD34D" },
+  "Consumer Staples":        { color:"#059669", bg:"#D1FAE5", text:"#064E3B", border:"#6EE7B7" },
+  "Energy":                  { color:"#DC2626", bg:"#FEE2E2", text:"#991B1B", border:"#FCA5A5" },
+  "Financials":              { color:"#2563EB", bg:"#DBEAFE", text:"#1E3A8A", border:"#93C5FD" },
+  "Industrials":             { color:"#0891B2", bg:"#CFFAFE", text:"#164E63", border:"#67E8F9" },
+  "Information Technology":  { color:"#7C2D92", bg:"#F3E8FF", text:"#581C87", border:"#D8B4FE" },
+  "Materials":               { color:"#B45309", bg:"#FEF9C3", text:"#713F12", border:"#FDE68A" },
+  "Utilities":               { color:"#047857", bg:"#ECFDF5", text:"#065F46", border:"#6EE7B7" },
+};
+
+const SEC_SHORT = {
+  "Communication Services":"Comm.", "Consumer Discretionary":"Conso. Disc.",
+  "Consumer Staples":"Conso. Stap.", "Energy":"Énergie", "Financials":"Finance",
+  "Industrials":"Industrie", "Information Technology":"Tech.",
+  "Materials":"Matériaux", "Utilities":"Services pub."
+};
+
+const STOCKS = [
+  {t:"BCE",    n:"BCE INC",             s:"Communication Services", q:"Modéré", a:"Faible",  p:true},
+  {t:"T",      n:"TELUS CORP",          s:"Communication Services", q:"Modéré", a:"Modéré",  p:false},
+  {t:"RCI/B",  n:"ROGERS COMMUNI-B",   s:"Communication Services", q:"Modéré", a:"Modéré",  p:false},
+  {t:"DOL",    n:"DOLLARAMA INC",       s:"Consumer Discretionary", q:"Élevé",  a:"Élevé",   p:false},
+  {t:"QSR",    n:"RESTAURANT BRAND",    s:"Consumer Discretionary", q:"Modéré", a:"Modéré",  p:false},
+  {t:"MG",     n:"MAGNA INTL",          s:"Consumer Discretionary", q:"Modéré", a:"Élevé",   p:false},
+  {t:"GIL",    n:"GILDAN ACTIVEWEA",    s:"Consumer Discretionary", q:"Modéré", a:"Élevé",   p:false},
+  {t:"ATD",    n:"ALIMEN COUCHE",       s:"Consumer Staples",       q:"Modéré", a:"Modéré",  p:true},
+  {t:"L",      n:"LOBLAW COS LTD",      s:"Consumer Staples",       q:"Élevé",  a:"Modéré",  p:false},
+  {t:"MRU",    n:"METRO INC/CN",        s:"Consumer Staples",       q:"Élevé",  a:"Modéré",  p:false},
+  {t:"WN",     n:"WESTON (GEORGE)",      s:"Consumer Staples",       q:"Élevé",  a:"Modéré",  p:false},
+  {t:"ENB",    n:"ENBRIDGE INC",        s:"Energy",                 q:"Élevé",  a:"Faible",  p:true},
+  {t:"RY",     n:"ROYAL BANK OF CA",    s:"Financials",             q:"Élevé",  a:"Modéré",  p:true},
+  {t:"TD",     n:"TORONTO-DOM BANK",    s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"BMO",    n:"BANK OF MONTREAL",    s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"CM",     n:"CAN IMPL BK COMM",    s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"BN",     n:"BROOKFIELD CORP",     s:"Financials",             q:"Élevé",  a:"Élevé",   p:true},
+  {t:"BNS",    n:"BANK OF NOVA SCO",    s:"Financials",             q:"Modéré", a:"Faible",  p:false},
+  {t:"MFC",    n:"MANULIFE FIN",        s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"NA",     n:"NATL BK CANADA",      s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"SLF",    n:"SUN LIFE FINANCI",    s:"Financials",             q:"Modéré", a:"Modéré",  p:false},
+  {t:"IAG",    n:"IA FINANCIAL COR",    s:"Financials",             q:"Modéré", a:"Élevé",   p:false},
+  {t:"FFH",    n:"FAIRFAX FINL HLD",    s:"Financials",             q:"Modéré", a:"Élevé",   p:false},
+  {t:"IFC",    n:"INTACT FINANCIAL",    s:"Financials",             q:"Élevé",  a:"Élevé",   p:false},
+  {t:"POW",    n:"POWER CORP CDA",      s:"Financials",             q:"Modéré", a:"Faible",  p:true},
+  {t:"GWO",    n:"GREAT-WEST LIFEC",    s:"Financials",             q:"Modéré", a:"Faible",  p:false},
+  {t:"IGM",    n:"IGM FINANCIAL IN",    s:"Financials",             q:"Modéré", a:"Faible",  p:false},
+  {t:"BAM",    n:"BROOKFIELD-A",        s:"Financials",             q:"Élevé",  a:"Élevé",   p:false},
+  {t:"CP",     n:"CANADIAN PACIFIC",    s:"Industrials",            q:"Élevé",  a:"Modéré",  p:false},
+  {t:"CNR",    n:"CAN NATL RAILWAY",    s:"Industrials",            q:"Élevé",  a:"Modéré",  p:true},
+  {t:"WCN",    n:"WASTE CONNECTION",    s:"Industrials",            q:"Élevé",  a:"Élevé",   p:false},
+  {t:"WSP",    n:"WSP GLOBAL INC",      s:"Industrials",            q:"Élevé",  a:"Élevé",   p:false},
+  {t:"TRI",    n:"THOMSON REUTERS",     s:"Industrials",            q:"Élevé",  a:"Élevé",   p:false},
+  {t:"ATRL",   n:"ATKINSREALIS GRO",    s:"Industrials",            q:"Élevé",  a:"Élevé",   p:true},
+  {t:"TIH",    n:"TOROMONT INDS",       s:"Industrials",            q:"Élevé",  a:"Faible",  p:false},
+  {t:"TFII",   n:"TFI INTERNATIONA",    s:"Industrials",            q:"Modéré", a:"Modéré",  p:false},
+  {t:"STN",    n:"STANTEC INC",         s:"Industrials",            q:"Élevé",  a:"Élevé",   p:false},
+  {t:"SHOP",   n:"SHOPIFY INC - A",     s:"Information Technology", q:"Modéré", a:"Modéré",  p:true},
+  {t:"CLS",    n:"CELESTICA INC",       s:"Information Technology", q:"Faible", a:"Modéré",  p:false},
+  {t:"CSU",    n:"CONSTELLATION SO",    s:"Information Technology", q:"Modéré", a:"Élevé",   p:false},
+  {t:"GIB/A",  n:"CGI INC",             s:"Information Technology", q:"Modéré", a:"Élevé",   p:false},
+  {t:"FTS",    n:"FORTIS INC",          s:"Utilities",              q:"Élevé",  a:"Faible",  p:false},
+  {t:"BIP-U",  n:"BROOKFIELD INFRA",    s:"Utilities",              q:"Élevé",  a:"Modéré",  p:false},
+  {t:"EMA",    n:"EMERA INC",           s:"Utilities",              q:"Élevé",  a:"Faible",  p:false},
+];
+
+const ROWS     = ["Élevé","Modéré","Faible"];
+const COLS     = ["Faible","Modéré","Élevé"];
+const ROW_LBLS = ["Forte","Modérée","Faible"];
+const COL_LBLS = ["Faible attrait","Attrait modéré","Fort attrait"];
+
+let portOnly = false;
+let activeSectors = new Set(Object.keys(S));
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+function render(){
+  renderControls();
+  renderGrid();
+  renderLegend();
+}
+
+function renderControls(){
+  const ctrl = document.getElementById("controls");
+  ctrl.innerHTML = "";
+
+  // Univers
+  const ug = el("div","ctrl-group");
+  ug.appendChild(lbl("Univers :"));
+  const bAll = btn("Complet", !portOnly, ()=>{ portOnly=false; render(); });
+  const bPort = btn("En portefeuille ★", portOnly, ()=>{ portOnly=true; render(); }, portOnly?"port-active":null);
+  ug.append(bAll, bPort);
+  ctrl.appendChild(ug);
+
+  ctrl.appendChild(sep());
+
+  // Secteurs
+  const sg = el("div","ctrl-group");
+  sg.appendChild(lbl("Secteurs :"));
+  const bAS = btn("Tous", activeSectors.size===Object.keys(S).length, ()=>{ activeSectors=new Set(Object.keys(S)); render(); });
+  sg.appendChild(bAS);
+  Object.entries(S).forEach(([sec,col])=>{
+    const on = activeSectors.has(sec);
+    const b = btn(SEC_SHORT[sec]||sec, on, ()=>{
+      if(activeSectors.has(sec)) activeSectors.delete(sec); else activeSectors.add(sec);
+      render();
+    });
+    if(on){ b.style.background=col.bg; b.style.color=col.text; b.style.borderColor=col.border; }
+    sg.appendChild(b);
+  });
+  ctrl.appendChild(sg);
+}
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+
+  grid.appendChild(el("div","corner"));
+  COL_LBLS.forEach(l=>{ const h=el("div","col-hdr"); h.textContent=l; grid.appendChild(h); });
+
+  ROWS.forEach((rowQ,ri)=>{
+    const rh = el("div","row-hdr"); rh.textContent=ROW_LBLS[ri]; grid.appendChild(rh);
+
+    COLS.forEach((colA)=>{
+      const cell = el("div","cell");
+      const isFF = rowQ==="Faible" && colA==="Faible";
+      const isEE = rowQ==="Élevé"  && colA==="Élevé";
+      if(isFF) cell.classList.add("q-ff");
+      if(isEE) cell.classList.add("q-ee");
+
+      let stocks;
+      if(isFF){
+        stocks = STOCKS.filter(s=>s.q==="Faible"&&s.a==="Faible"&&s.p&&activeSectors.has(s.s));
+      } else {
+        stocks = STOCKS.filter(s=>{
+          if(s.q!==rowQ||s.a!==colA) return false;
+          if(!activeSectors.has(s.s)) return false;
+          if(portOnly&&!s.p) return false;
+          return true;
+        });
+      }
+
+      const chips = el("div","chips");
+      if(stocks.length===0){
+        const note = el("div","empty-note"); note.textContent="—"; chips.appendChild(note);
+      }
+      shuffle(stocks).forEach(st=>{
+        const col = S[st.s]||{bg:"#f3f4f6",text:"#374151",border:"#d1d5db"};
+        const chip = el("span","chip");
+        chip.title = st.n+" — "+st.s;
+        chip.style.background   = col.bg;
+        chip.style.color        = col.text;
+        chip.style.borderColor  = col.border;
+        chip.innerHTML = st.t + (st.p ? '<sup>★</sup>' : '');
+        chips.appendChild(chip);
+      });
+      cell.appendChild(chips);
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function renderLegend(){
+  const leg = document.getElementById("legend");
+  leg.innerHTML="";
+  Object.entries(S).forEach(([sec,col])=>{
+    const item = el("div","leg");
+    const dot = el("div","leg-dot"); dot.style.background=col.color;
+    const span = el("span"); span.textContent=SEC_SHORT[sec]||sec;
+    item.append(dot,span); leg.appendChild(item);
+  });
+  const star = el("span","leg-star"); star.textContent="★ = en portefeuille";
+  leg.appendChild(star);
+}
+
+function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function lbl(txt){ const s=el("span","ctrl-lbl"); s.textContent=txt; return s; }
+function sep(){ const d=el("div","sep"); return d; }
+function btn(txt, active, onclick, extraCls){
+  const b=el("button","btn");
+  b.textContent=txt;
+  if(active) b.classList.add(extraCls||"active");
+  b.onclick=onclick;
+  return b;
+}
+
+render();
+</script>
+</body>
+</html>
